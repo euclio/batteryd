@@ -80,7 +80,7 @@ int main(void) {
             if(low < capacity && capacity < high) {
                 if(notify_init("batteryd")) {
                     std::ostringstream message;
-                    message << "Battery level is less than <b>" <<
+                    message << "Battery level is less than " <<
                         capacity << " percent." << std::endl <<
                         "You might want to plug in your computer.";
                     NotifyNotification *notification =
