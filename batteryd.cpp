@@ -1,5 +1,5 @@
 /* Batteryd - A simple battery daemon for Archlinux
- * 
+ *
  * Copyright (c) 2013 by Christian Rebischke <echo Q2hyaXMuUmViaXNjaGtlQGdtYWlsLmNvbQo= | base64 -d>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -27,103 +27,90 @@
  */
 
 
-#include <libnotify/notify.h>
-#include <cstdlib> 
-#include <fstream> 
-#include <unistd.h>
-#include <sstream> 
+#include <chrono>
+#include <fstream>
 #include <iostream>
-#include <sys/stat.h>
+#include <sstream>
+#include <thread>
 
-using namespace std;
+#include <libnotify/notify.h>
 
-//Begin config section feel free to change these values :)
-const int repeater = 60;
+// Begin config section feel free to change these values :)
+const std::chrono::seconds SLEEP_TIME(60);
 const int high = 20;
 const int low = 10;
 const int critical = 5;
-const char* statuspath = "/sys/class/power_supply/BAT0/status";
-const char* capacitypath = "/sys/class/power_supply/BAT0/capacity";
+const std::string status_path = "/sys/class/power_supply/BAT0/status";
+const std::string capacity_path = "/sys/class/power_supply/BAT0/capacity";
 
-const string high_title = "Battery Low";
-const string high_message = "The battery level is less than %d percent.\n"
-                            "You might want to plug in your computer.";
-const string low_title = "Battery Critical";
-const string low_message = "The battery level is less than <b>%d percent</b>.\n"
-                           "Plug in your computer now.";
-//End config section
+const std::string high_title = "Battery Low";
+const std::string high_message =
+    "The battery level is less than %d percent.\n"
+    "You might want to plug in your computer.";
+const std::string low_title = "Battery Critical";
+const std::string low_message =
+    "The battery level is less than <b>%d percent</b>.\n"
+    "Plug in your computer now.";
+// End config section
 
+int main(void) {
+    int capacity;
+    std::string status;
 
+    while(true) {
+        std::this_thread::sleep_for(SLEEP_TIME);
 
-int main(void)
-{
-  string scapacity;
-  int icapacity;
-  string status;
-  ifstream infile1;
-  ifstream infile2;
-
-  while(true)
-  {
-    sleep(repeater);
-
-    //Lines for filecheck
-    struct stat buffer;
-    if( (stat (statuspath, &buffer) == 0) == 0)
-    {
-      cerr << "no status file" << endl;
-      return 1;
-    }
-    
-    if( (stat (capacitypath, &buffer) == 0) == 0)
-    {
-      cerr << "no capacity file" << endl;
-      return 1;
-    }
-    //End Filecheck 
-
-    infile1.open(statuspath);
-    getline(infile1,status);
-    infile1.close();
-    if(status.compare("Discharging") == 0) {
-      infile2.open(capacitypath);
-      getline(infile2,scapacity);
-      infile2.close();
-      stringstream convert(scapacity);
-      convert >> icapacity;
-      if(icapacity < high && icapacity > low) {
-        if(notify_init("batteryd")) {
-          ostringstream message;
-          message << "Battery level is less than <b>" <<
-              icapacity << " percent." << endl <<
-              "You might want to plug in your computer.";
-          NotifyNotification *notification =
-              notify_notification_new(high_title.c_str(),
-                                      message.str().c_str(), NULL);
-          notify_notification_set_urgency(notification, NOTIFY_URGENCY_NORMAL);
-          notify_notification_show(notification, NULL);
-          g_object_unref(notification);
-          notify_uninit();
+        // Ensure that the files exist
+        std::ifstream status_file(status_path);
+        if(!status_file.good()) {
+            std::cerr << "no status file" << std::endl;
+            exit(1);
         }
-      } else if(icapacity < low && icapacity > critical) {
-        if(notify_init("batteryd")) {
-          ostringstream message;
-          message << "Battery level is less than <b>" <<
-              icapacity << " percent</b>." << endl <<
-              "Plug in your computer now.";
-          NotifyNotification *notification =
-              notify_notification_new(low_title.c_str(), message.str().c_str(),
-                                      NULL);
-          notify_notification_set_urgency(notification, NOTIFY_URGENCY_CRITICAL);
-          notify_notification_show(notification, NULL);
-          g_object_unref(notification);
-          notify_uninit();
+        status_file >> status;
+        status_file.close();
+
+        if(status == "Discharging") {
+            std::ifstream capacity_file(capacity_path);
+            if(!capacity_file.good()) {
+                std::cerr << "no capacity file" << std::endl;
+                exit(1);
+            }
+            capacity_file >> capacity;
+            capacity_file.close();
+            if(low < capacity && capacity < high) {
+                if(notify_init("batteryd")) {
+                    std::ostringstream message;
+                    message << "Battery level is less than <b>" <<
+                        capacity << " percent." << std::endl <<
+                        "You might want to plug in your computer.";
+                    NotifyNotification *notification =
+                        notify_notification_new(high_title.c_str(),
+                                message.str().c_str(), nullptr);
+                    notify_notification_set_urgency(notification,
+                                                    NOTIFY_URGENCY_NORMAL);
+                    notify_notification_show(notification, nullptr);
+                    g_object_unref(notification);
+                    notify_uninit();
+                }
+            } else if(critical < capacity && capacity < low) {
+                if(notify_init("batteryd")) {
+                    std::ostringstream message;
+                    message << "Battery level is less than <b>" <<
+                        capacity << " percent</b>." << std::endl <<
+                        "Plug in your computer now.";
+                    NotifyNotification *notification =
+                        notify_notification_new(low_title.c_str(),
+                                message.str().c_str(), nullptr);
+                    notify_notification_set_urgency(notification,
+                                                    NOTIFY_URGENCY_CRITICAL);
+                    notify_notification_show(notification, nullptr);
+                    g_object_unref(notification);
+                    notify_uninit();
+                }
+                std::cout << "\a";
+            } else if (capacity < critical) {
+                system("/usr/bin/systemctl suspend");
+            }
         }
-        cout << "\a";
-      } else if (icapacity < critical) {
-          system("/usr/bin/systemctl suspend");
-      }
     }
-  }
-  return 0;
 }
