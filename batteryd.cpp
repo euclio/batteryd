@@ -39,7 +39,7 @@ using namespace std;
 
 //Begin config section feel free to change these values :)
 const int repeater = 60;
-const int high = 15;
+const int high = 20;
 const int low = 10;
 const char* statuspath = "/sys/class/power_supply/BAT0/status";
 const char* capacitypath = "/sys/class/power_supply/BAT0/capacity";
