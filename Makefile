@@ -1,5 +1,6 @@
 CC=g++
 
+CXXFLAGS := -O3 -std=c++0x -Wall -g
 LDFLAGS= $(shell pkg-config --cflags --libs libnotify)
 
 
@@ -14,7 +15,7 @@ all: ${TARGET}
 
 ${TARGET}: ${SOURCE}
 	@echo ${CC} $^ -o $@
-	@${CC} $^ -o $@  ${LDFLAGS}
+	@${CC} ${CXXFLAGS} $^ -o $@  ${LDFLAGS}
 
 install: 
 	install -d ${INSTALLDIR}
