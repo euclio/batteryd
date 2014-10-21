@@ -95,7 +95,7 @@ int main(void)
         if(notify_init("batteryd")) {
           ostringstream message;
           message << "Battery level is less than <b>" <<
-              icapacity << "percent." << endl <<
+              icapacity << " percent." << endl <<
               "You might want to plug in your computer.";
           NotifyNotification *notification =
               notify_notification_new(high_title.c_str(),
@@ -109,7 +109,7 @@ int main(void)
         if(notify_init("batteryd")) {
           ostringstream message;
           message << "Battery level is less than <b>" <<
-              icapacity << "percent</b>." << endl <<
+              icapacity << " percent</b>." << endl <<
               "Plug in your computer now.";
           NotifyNotification *notification =
               notify_notification_new(low_title.c_str(), message.str().c_str(),
