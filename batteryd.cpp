@@ -41,6 +41,7 @@ using namespace std;
 const int repeater = 60;
 const int high = 20;
 const int low = 10;
+const int critical = 5;
 const char* statuspath = "/sys/class/power_supply/BAT0/status";
 const char* capacitypath = "/sys/class/power_supply/BAT0/capacity";
 //End config section
@@ -107,16 +108,9 @@ int main(void)
           notify_uninit();
         }
         cout << "\a";
-        continue;
+      } else if (icapacity < critical) {
+          system("/usr/bin/systemctl suspend");
       }
-      else
-      {
-        continue;
-      }
-    }
-    else
-    {
-      continue;
     }
   }
   return 0;
