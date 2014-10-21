@@ -1,11 +1,11 @@
-#Maintainer: Christian Rebischke <echo Q2hyaXMuUmViaXNjaGtlQGdtYWlsLmNvbQo= | base64 -d>
+# Maintainer: Andy Russell <andy@acrussell.com>
 
 pkgname=batteryd-git
 pkgver=
 pkgrel=1
 pkgdesc="A small battery daemon for Archlinux"
 arch=("any")
-url=("https://github.com/shibumi/batteryd")
+url=("https://github.com/euclio/batteryd")
 license=("GPLv3")
 depends=("libnotify")
 makedepends=("git" "gcc")
