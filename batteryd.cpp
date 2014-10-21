@@ -44,6 +44,13 @@ const int low = 10;
 const int critical = 5;
 const char* statuspath = "/sys/class/power_supply/BAT0/status";
 const char* capacitypath = "/sys/class/power_supply/BAT0/capacity";
+
+const string high_title = "Battery Low";
+const string high_message = "The battery level is less than %d percent.\n"
+                            "You might want to plug in your computer.";
+const string low_title = "Battery Critical";
+const string low_message = "The battery level is less than <b>%d percent</b>.\n"
+                           "Plug in your computer now.";
 //End config section
 
 
@@ -78,30 +85,35 @@ int main(void)
     infile1.open(statuspath);
     getline(infile1,status);
     infile1.close();
-    if(status.compare("Discharging") == 0)
-    {
+    if(status.compare("Discharging") == 0) {
       infile2.open(capacitypath);
       getline(infile2,scapacity);
       infile2.close();
       stringstream convert(scapacity);
       convert >> icapacity;
-      if(icapacity < high && icapacity > low)
-      {
-        if(notify_init("batteryd"))
-        {
-          NotifyNotification *notification = notify_notification_new("Caution!!","Battery is low", NULL);
+      if(icapacity < high && icapacity > low) {
+        if(notify_init("batteryd")) {
+          ostringstream message;
+          message << "Battery level is less than <b>" <<
+              icapacity << "percent." << endl <<
+              "You might want to plug in your computer.";
+          NotifyNotification *notification =
+              notify_notification_new(high_title.c_str(),
+                                      message.str().c_str(), NULL);
           notify_notification_set_urgency(notification, NOTIFY_URGENCY_NORMAL);
           notify_notification_show(notification, NULL);
           g_object_unref(notification);
           notify_uninit();
         }
-        continue;
-      }
-      else if(icapacity < low)
-      {
-        if(notify_init("batteryd"))
-        {
-          NotifyNotification *notification = notify_notification_new("Caution!!","Battery is very low",NULL);
+      } else if(icapacity < low && icapacity > critical) {
+        if(notify_init("batteryd")) {
+          ostringstream message;
+          message << "Battery level is less than <b>" <<
+              icapacity << "percent</b>." << endl <<
+              "Plug in your computer now.";
+          NotifyNotification *notification =
+              notify_notification_new(low_title.c_str(), message.str().c_str(),
+                                      NULL);
           notify_notification_set_urgency(notification, NOTIFY_URGENCY_CRITICAL);
           notify_notification_show(notification, NULL);
           g_object_unref(notification);
