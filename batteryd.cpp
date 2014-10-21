@@ -28,6 +28,7 @@
 
 
 #include <chrono>
+#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -109,7 +110,7 @@ int main(void) {
                 }
                 std::cout << "\a";
             } else if (capacity < critical) {
-                system("/usr/bin/systemctl suspend");
+                std::system("/usr/bin/systemctl suspend");
             }
         }
     }
