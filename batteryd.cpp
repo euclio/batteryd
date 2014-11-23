@@ -34,6 +34,7 @@
 #include <sstream>
 #include <thread>
 
+#include <gio/gio.h>
 #include <libnotify/notify.h>
 
 // Begin config section feel free to change these values :)
@@ -53,6 +54,36 @@ const std::string low_message =
     "The battery level is less than <b>%d percent</b>.\n"
     "Plug in your computer now.";
 // End config section
+
+/*
+ * Suspend the computer by sending a message to logind.
+ */
+void suspend() {
+    GError *error = nullptr;
+
+    GDBusConnection *connection =
+        g_bus_get_sync(
+                G_BUS_TYPE_SYSTEM,
+                nullptr,    /* cancellable */
+                &error);
+
+    GVariant *return_values =
+        g_dbus_connection_call_sync(
+                connection,
+                "org.freedesktop.login1",
+                "/org/freedesktop/login1",
+                "org.freedesktop.login1.Manager",
+                "Suspend",
+                g_variant_new("(b)", "true"),
+                NULL,
+                G_DBUS_CALL_FLAGS_NONE,
+                -1,
+                NULL,
+                &error);
+
+    g_variant_unref(return_values);
+    g_object_unref(connection);
+}
 
 int main(void) {
     int capacity;
@@ -110,7 +141,7 @@ int main(void) {
                 }
                 std::cout << "\a";
             } else if (capacity < critical) {
-                std::system("/usr/bin/systemctl suspend");
+                suspend();
             }
         }
     }
