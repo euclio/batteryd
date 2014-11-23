@@ -33,6 +33,7 @@
 #include <sstream>
 #include <thread>
 
+#include <boost/format.hpp>
 #include <gio/gio.h>
 #include <libnotify/notify.h>
 
@@ -46,11 +47,11 @@ const std::string capacity_path = "/sys/class/power_supply/BAT0/capacity";
 
 const std::string high_title = "Battery Low";
 const std::string high_message =
-    "The battery level is less than %d percent.\n"
+    "The battery level is less than %1% percent.\n"
     "You might want to plug in your computer.";
 const std::string low_title = "Battery Critical";
 const std::string low_message =
-    "The battery level is less than <b>%d percent</b>.\n"
+    "The battery level is less than <b>%1% percent</b>.\n"
     "Plug in your computer now.";
 // End config section
 
@@ -104,35 +105,16 @@ void send_notification(std::string title, std::string message,
  * Display a warning to the user on low battery.
  */
 void emit_battery_warning(int capacity, bool critical) {
+    using boost::format;
+    using boost::str;
+
     if(notify_init("batteryd")) {
-        std::ostringstream message;
-        message << "Battery level is less than ";
-
-        // Bold the message if it's critical
         if (critical) {
-            message << "<b>";
-        }
-
-        message << capacity << " percent";
-
-        if (critical) {
-            message << "</b>";
-        }
-
-        message << "." << std::endl;
-
-        if (critical) {
-            message << "Plug in your computer now.";
+            std::string message = str(format(low_message) % capacity);
+            send_notification(low_title, message, NOTIFY_URGENCY_CRITICAL);
         } else {
-            message << "You might want to plug in your computer.";
-        }
-
-        if (critical) {
-            send_notification(low_title, message.str(),
-                              NOTIFY_URGENCY_CRITICAL);
-        } else {
-            send_notification(high_title, message.str(),
-                              NOTIFY_URGENCY_NORMAL);
+            std::string message = str(format(high_message) % capacity);
+            send_notification(high_title, message, NOTIFY_URGENCY_NORMAL);
         }
     }
 }
