@@ -4,11 +4,11 @@ pkgname=batteryd-git
 pkgver=
 pkgrel=1
 pkgdesc="A small battery daemon for Archlinux"
-arch=("any")
+arch=("i686 x86_64")
 url=("https://github.com/euclio/batteryd")
 license=("GPL3")
-depends=("libnotify" "glib2" "boost")
-makedepends=("git" "gcc" "cmake")
+depends=("libnotify")
+makedepends=("git" "gcc" "cmake" "boost")
 source=("git+http://github.com/euclio/batteryd")
 md5sums=("SKIP")
 install="batteryd.install"
@@ -27,7 +27,10 @@ build() {
 
 package() {
   install -D -m644 "${srcdir}/batteryd/batteryd.service" \
-    "${pkgdir}/lib/systemd/system/batteryd.service"
+    "${pkgdir}/usr/lib/systemd/system/batteryd.service"
+
+  install -D -m644 "${srcdir}/batteryd/batteryd.rules" \
+    "${pkgdir}/usr/share/polkit-1/rules.d/batteryd.rules"
 
   install -D -m644 "${srcdir}/batteryd/LICENSE" \
     "${pkgdir}/usr/share/licenses/batteryd/LICENSE"

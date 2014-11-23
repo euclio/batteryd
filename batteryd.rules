@@ -1,0 +1,9 @@
+/* Allow users in power group to suspend computer without authentication */
+polkit.addRule(function(action, subject) {
+    if (action.id == "org.freedesktop.login1.suspend" &&
+        subject.isInGroup("power")) {
+        polkit.log("action=" + action);
+        polkit.log("subject=" + subject);
+        return polkit.Result.YES;
+    }
+});

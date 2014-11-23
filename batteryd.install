@@ -2,9 +2,10 @@
 
 post_install(){
   systemctl daemon-reload
-  echo "[+] Please change user and display in /lib/systemd/system/batteryd.service"
-  echo "[+] Please enable batteryd with 'systemctl enable batteryd.service'"
-  echo "[+] You can activate it with 'systemctl start batteryd.service'"
+  echo "[+] Note: You must be a member of the 'power' group to use batteryd."
+  echo "[+] Add yourself with 'gpasswd -a \$USER power'"
+  echo "[+] Please enable batteryd with 'systemctl enable batteryd'"
+  echo "[+] You can activate it with 'systemctl start batteryd'"
 }
 
 pre_remove(){
