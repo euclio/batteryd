@@ -28,7 +28,6 @@
 
 
 #include <chrono>
-#include <cstdlib>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -54,6 +53,8 @@ const std::string low_message =
     "The battery level is less than <b>%d percent</b>.\n"
     "Plug in your computer now.";
 // End config section
+
+enum BatteryStatus { CHARGING, DISCHARGING };
 
 /*
  * Suspend the computer by sending a message to logind.
@@ -85,61 +86,101 @@ void suspend() {
     g_object_unref(connection);
 }
 
-int main(void) {
-    int capacity;
+void send_notification(std::string title, std::string message,
+                       NotifyUrgency urgency) {
+    NotifyNotification *notification =
+        notify_notification_new(
+                high_title.c_str(),
+                message.c_str(),
+                nullptr);
+
+    notify_notification_set_urgency(notification, urgency);
+    notify_notification_show(notification, nullptr);
+    g_object_unref(notification);
+    notify_uninit();
+}
+
+/*
+ * Display a warning to the user on low battery.
+ */
+void emit_battery_warning(int capacity, bool critical) {
+    if(notify_init("batteryd")) {
+        std::ostringstream message;
+        message << "Battery level is less than ";
+
+        // Bold the message if it's critical
+        if (critical) {
+            message << "<b>";
+        }
+
+        message << capacity << " percent";
+
+        if (critical) {
+            message << "</b>";
+        }
+
+        message << "." << std::endl;
+
+        if (critical) {
+            message << "Plug in your computer now.";
+        } else {
+            message << "You might want to plug in your computer.";
+        }
+
+        if (critical) {
+            send_notification(low_title, message.str(),
+                              NOTIFY_URGENCY_CRITICAL);
+        } else {
+            send_notification(high_title, message.str(),
+                              NOTIFY_URGENCY_NORMAL);
+        }
+    }
+}
+
+BatteryStatus read_battery_status() {
     std::string status;
 
+    // Ensure that the file exists.
+    std::ifstream status_file(status_path);
+    if(!status_file.good()) {
+        std::cerr << "no status file" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    status_file >> status;
+    status_file.close();
+
+    return status == "Discharging" ? DISCHARGING : CHARGING;
+}
+
+int read_battery_capacity() {
+    int capacity;
+
+    std::ifstream capacity_file(capacity_path);
+    if(!capacity_file.good()) {
+        std::cerr << "no capacity file" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    capacity_file >> capacity;
+    capacity_file.close();
+
+    return capacity;
+}
+
+int main(void) {
     while(true) {
         std::this_thread::sleep_for(SLEEP_TIME);
 
-        // Ensure that the files exist
-        std::ifstream status_file(status_path);
-        if(!status_file.good()) {
-            std::cerr << "no status file" << std::endl;
-            exit(1);
-        }
-        status_file >> status;
-        status_file.close();
+        BatteryStatus status = read_battery_status();
 
-        if(status == "Discharging") {
-            std::ifstream capacity_file(capacity_path);
-            if(!capacity_file.good()) {
-                std::cerr << "no capacity file" << std::endl;
-                exit(1);
-            }
-            capacity_file >> capacity;
-            capacity_file.close();
+        if(status == DISCHARGING) {
+            int capacity = read_battery_capacity();
             if(low < capacity && capacity < high) {
-                if(notify_init("batteryd")) {
-                    std::ostringstream message;
-                    message << "Battery level is less than " <<
-                        capacity << " percent." << std::endl <<
-                        "You might want to plug in your computer.";
-                    NotifyNotification *notification =
-                        notify_notification_new(high_title.c_str(),
-                                message.str().c_str(), nullptr);
-                    notify_notification_set_urgency(notification,
-                                                    NOTIFY_URGENCY_NORMAL);
-                    notify_notification_show(notification, nullptr);
-                    g_object_unref(notification);
-                    notify_uninit();
-                }
+                emit_battery_warning(capacity, false);
             } else if(critical < capacity && capacity < low) {
-                if(notify_init("batteryd")) {
-                    std::ostringstream message;
-                    message << "Battery level is less than <b>" <<
-                        capacity << " percent</b>." << std::endl <<
-                        "Plug in your computer now.";
-                    NotifyNotification *notification =
-                        notify_notification_new(low_title.c_str(),
-                                message.str().c_str(), nullptr);
-                    notify_notification_set_urgency(notification,
-                                                    NOTIFY_URGENCY_CRITICAL);
-                    notify_notification_show(notification, nullptr);
-                    g_object_unref(notification);
-                    notify_uninit();
-                }
-                std::cout << "\a";
+                emit_battery_warning(capacity, true);
+                std::cout << "\a" << std::endl;
             } else if (capacity < critical) {
                 suspend();
             }
