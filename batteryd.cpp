@@ -95,7 +95,7 @@ void send_notification(std::string title, std::string message,
                        NotifyUrgency urgency) {
     NotifyNotification *notification =
         notify_notification_new(
-                high_title.c_str(),
+                title.c_str(),
                 message.c_str(),
                 nullptr);
 
