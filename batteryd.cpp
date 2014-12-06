@@ -61,35 +61,7 @@ enum BatteryStatus { CHARGING, DISCHARGING };
  * Suspend the computer by sending a message to logind.
  */
 void suspend() {
-    GError *error = nullptr;
-
-    GDBusConnection *connection =
-        g_bus_get_sync(
-                G_BUS_TYPE_SYSTEM,
-                nullptr,    /* cancellable */
-                &error);
-
-    GVariant *return_values =
-        g_dbus_connection_call_sync(
-                connection,
-                "org.freedesktop.login1",
-                "/org/freedesktop/login1",
-                "org.freedesktop.login1.Manager",
-                "Suspend",
-                g_variant_new("(b)", "true"),
-                nullptr,    /* reply_type */
-                G_DBUS_CALL_FLAGS_NONE,
-                -1,
-                nullptr,    /* cancellable */
-                &error);
-
-    if (error) {
-        std::cerr << error->message << std::endl;
-        g_error_free(error);
-    }
-
-    g_variant_unref(return_values);
-    g_object_unref(connection);
+    std::system("systemctl suspend");
 }
 
 void send_notification(std::string title, std::string message,
