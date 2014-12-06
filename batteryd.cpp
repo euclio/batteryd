@@ -85,6 +85,7 @@ void suspend() {
 
     if (error) {
         std::cerr << error->message << std::endl;
+        g_error_free(error);
     }
 
     g_variant_unref(return_values);
@@ -98,9 +99,15 @@ void send_notification(std::string title, std::string message,
                 title.c_str(),
                 message.c_str(),
                 nullptr);
-
     notify_notification_set_urgency(notification, urgency);
-    notify_notification_show(notification, nullptr);
+
+    GError *error;
+    notify_notification_show(notification, &error);
+    if (error) {
+        std::cerr << error->message << std::endl;
+        g_error_free(error);
+    }
+
     g_object_unref(notification);
 }
 
