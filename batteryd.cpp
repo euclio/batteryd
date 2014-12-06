@@ -77,11 +77,15 @@ void suspend() {
                 "org.freedesktop.login1.Manager",
                 "Suspend",
                 g_variant_new("(b)", "true"),
-                NULL,
+                nullptr,    /* reply_type */
                 G_DBUS_CALL_FLAGS_NONE,
                 -1,
-                NULL,
+                nullptr,    /* cancellable */
                 &error);
+
+    if (error) {
+        std::cerr << error->message << std::endl;
+    }
 
     g_variant_unref(return_values);
     g_object_unref(connection);
