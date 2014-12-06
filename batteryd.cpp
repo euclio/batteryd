@@ -102,7 +102,6 @@ void send_notification(std::string title, std::string message,
     notify_notification_set_urgency(notification, urgency);
     notify_notification_show(notification, nullptr);
     g_object_unref(notification);
-    notify_uninit();
 }
 
 /*
@@ -112,14 +111,12 @@ void emit_battery_warning(int capacity, bool critical) {
     using boost::format;
     using boost::str;
 
-    if(notify_init("batteryd")) {
-        if (critical) {
-            std::string message = str(format(low_message) % capacity);
-            send_notification(low_title, message, NOTIFY_URGENCY_CRITICAL);
-        } else {
-            std::string message = str(format(high_message) % capacity);
-            send_notification(high_title, message, NOTIFY_URGENCY_NORMAL);
-        }
+    if (critical) {
+        std::string message = str(format(low_message) % capacity);
+        send_notification(low_title, message, NOTIFY_URGENCY_CRITICAL);
+    } else {
+        std::string message = str(format(high_message) % capacity);
+        send_notification(high_title, message, NOTIFY_URGENCY_NORMAL);
     }
 }
 
@@ -155,6 +152,11 @@ int read_battery_capacity() {
 }
 
 int main(void) {
+    if (!notify_init("batteryd")) {
+        std::cerr << "Error initializing libnotify." << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
     while(true) {
         std::this_thread::sleep_for(SLEEP_TIME);
 
