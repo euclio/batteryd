@@ -101,7 +101,7 @@ void send_notification(std::string title, std::string message,
                 nullptr);
     notify_notification_set_urgency(notification, urgency);
 
-    GError *error;
+    GError *error = nullptr;
     notify_notification_show(notification, &error);
     if (error) {
         std::cerr << error->message << std::endl;
