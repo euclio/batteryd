@@ -26,8 +26,8 @@ build() {
 }
 
 package() {
-  install -D -m644 "${srcdir}/batteryd/batteryd.service" \
-    "${pkgdir}/usr/lib/systemd/system/batteryd.service"
+  install -D -m644 "${srcdir}/batteryd/batteryd@.service" \
+    "${pkgdir}/usr/lib/systemd/system/batteryd@.service"
 
   install -D -m644 "${srcdir}/batteryd/batteryd.rules" \
     "${pkgdir}/usr/share/polkit-1/rules.d/batteryd.rules"

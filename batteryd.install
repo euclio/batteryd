@@ -4,11 +4,6 @@ post_install(){
   systemctl daemon-reload
   echo "[+] Note: You must be a member of the 'power' group to use batteryd."
   echo "[+] Add yourself with 'gpasswd -a \$USER power'"
-  echo "[+] Please enable batteryd with 'systemctl enable batteryd'"
-  echo "[+] You can activate it with 'systemctl start batteryd'"
-}
-
-pre_remove(){
-  systemctl stop batteryd
-  systemctl disable batteryd
+  echo "[+] Please enable batteryd with 'systemctl enable batteryd@\$USER'"
+  echo "[+] You can activate it with 'systemctl start batteryd@\$USER'"
 }
